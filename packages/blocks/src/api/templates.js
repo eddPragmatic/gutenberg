@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { every, map, get, mapValues, isArray } from 'lodash';
+import { every, map, get, mapValues, isArray, isEqual } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -56,12 +56,7 @@ export function synchronizeBlocksWithTemplate( blocks = [], template ) {
 
 	return map( template, ( [ name, attributes, innerBlocksTemplate ], index ) => {
 		const block = blocks[ index ];
-
-		if ( block && block.name === name ) {
-			const innerBlocks = synchronizeBlocksWithTemplate( block.innerBlocks, innerBlocksTemplate );
-			return { ...block, innerBlocks };
-		}
-
+		
 		// To support old templates that were using the "children" format
 		// for the attributes using "html" strings now, we normalize the template attributes
 		// before creating the blocks.
@@ -96,6 +91,12 @@ export function synchronizeBlocksWithTemplate( blocks = [], template ) {
 			get( blockType, [ 'attributes' ], {} ),
 			attributes
 		);
+		
+		
+		if ( block && block.name === name && isEqual( block.attributes, normalizedAttributes ) ) {
+			const innerBlocks = synchronizeBlocksWithTemplate( block.innerBlocks, innerBlocksTemplate );
+			return { ...block, innerBlocks };
+		}
 
 		return createBlock(
 			name,
